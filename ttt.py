@@ -43,9 +43,9 @@ def choose_move(board, player="o", depth = 0):
     best_move_score = -1.0
     avg = 0
     examined = 0
-    for move in available:
-        print "Preexamining", move, depth
 
+    # If we can win, don't recurse on other paths
+    for move in available:
         if wins(move, player):
             cache[(board,player)] = move, 1.0
             return move, 1.0
@@ -64,6 +64,8 @@ def choose_move(board, player="o", depth = 0):
         avg += score
         examined += 1
         if score > best_move_score:
+            if depth == 0:
+                print "Move", move, score
             best_move_score = score
             best = [move]
         elif score == best_move_score:
@@ -93,6 +95,11 @@ def invalidity_reason(board):
     if num_xs > num_os + 1:
         return "Too many Xs on the board"
 
+    if wins(board):
+        return "O already won"
+    if wins(board, "x"):
+        return "X already won"
+
     return None
 
 @app.route('/ttt')
@@ -109,19 +116,10 @@ def move():
     move, score =  choose_move(board)
     desc = ""
     if score >= 1:
-        desc = "wins"
+        print "wins"
     elif score <= 0:
-        desc = "looses"
-    return "We got <pre>{0}</pre> ({1})".format(move.replace(" ", "+"), desc)
-
-
-    if wins(board):
-        out += "o wins"
-    elif wins(board, player="x"):
-        out += "x wins"
-    else:
-        out += "No winner"
-    return out
+        print "loses"
+    return move
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8080)

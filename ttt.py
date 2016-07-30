@@ -33,27 +33,42 @@ def available_moves(board, player="o"):
 def other(player):
     return "x" if player == "o" else "o"
 
+cache = {}
+
 def choose_move(board, player="o"):
-    available = available_moves(board)
+    if (board, player) in cache:
+        print "Cache hit"
+        return cache[(board, player)]
+
+    available = list(available_moves(board, player))
     if not available:
+        print "Draw"
         return board, 0.5
+    #print "available_moves", list(available)
     best = []
     best_move_score = -1.0
     avg = 0
-    for i, move in enumerate(available):
+    examined = 0
+    #print "Walking list of length", len(available)
+    for move in available:
+        print "Examining", move
         if wins(move, player):
+            cache[(board,player)] = move, 1.0
             return move, 1.0
         reply, other_score = choose_move(move, other(player))
         score = 1 - other_score
         avg += score
+        examined += 1
         if score > best_move_score:
             best_move_score = score
             best = [move]
         elif score == best_move_score:
             best.append(move)
     # If our best move is a draw, we score as 0.5 * fraction of our moves that are draws
-    avg /= (i+1)
-    return random.choice(best), avg
+    avg /= examined
+
+    cache[(board,player)] = best[0], avg
+    return best[0], avg
 
 
 def invalidity_reason(board):
@@ -69,8 +84,10 @@ def invalidity_reason(board):
     num_xs = len(list(c for c in board if c == "x"))
     # Either player can start, but a player can never make two more moves than
     # the other
-    if abs(num_os - num_xs) > 1:
-        return "Imbalanced number of moves"
+    if num_os > num_xs:
+        return "It can't be O's move"
+    if num_xs > num_os + 1:
+        return "Too many Xs on the board"
 
     return None
 
@@ -91,7 +108,7 @@ def move():
         desc = "wins"
     elif score <= 0:
         desc = "looses"
-    return "We got {0} ({1})".format(move, desc)
+    return "We got <pre>{0}</pre> ({1})".format(move.replace(" ", "+"), desc)
 
 
     if wins(board):

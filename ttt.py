@@ -17,17 +17,17 @@ o_win_states = (
     "o...o...o",
     "..o.o.o..")
 
-x_win_states = list(re.compile(board.replace("o", "x")) for board in o_win_states)
-o_win_states = list(re.compile(board) for board in o_win_states)
+x_win_states = [re.compile(board.replace("o", "x")) for board in o_win_states]
+o_win_states = [re.compile(board) for board in o_win_states]
 
 def wins(board, player="o"):
     goals = o_win_states if player == "o" else x_win_states
     return any(g.match(board) for g in goals)
 
 def available_moves(board, player="o"):
-    for i, place in enumerate(board):
-        if place == " ":
-            yield board[:i] + player + board[i+1:]
+    return [board[:i] + player + board[i+1:]
+            for i, place in enumerate(board)
+            if place == " "]
 
 def other(player):
     return "x" if player == "o" else "o"

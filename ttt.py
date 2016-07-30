@@ -2,7 +2,7 @@ import flask
 
 app = flask.Flask(__name__)
 
-@app.route('/')
+@app.route('/ttt')
 def move():
     return "Hello world"
 

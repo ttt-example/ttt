@@ -17,13 +17,12 @@ o_win_states = (
     "o...o...o",
     "..o.o.o..")
 
-x_win_states = (re.compile(board.replace("o", "x")) for board in o_win_states)
-o_win_states = (re.compile(board) for board in o_win_states)
+x_win_states = list(re.compile(board.replace("o", "x")) for board in o_win_states)
+o_win_states = list(re.compile(board) for board in o_win_states)
 
 def wins(board, player="o"):
     goals = o_win_states if player == "o" else x_win_states
     return any(g.match(board) for g in goals)
-
 
 def available_moves(board, player="o"):
     for i, place in enumerate(board):
@@ -35,28 +34,33 @@ def other(player):
 
 cache = {}
 
-def choose_move(board, player="o"):
+def choose_move(board, player="o", depth = 0):
     if (board, player) in cache:
-        print "Cache hit"
         return cache[(board, player)]
 
     available = list(available_moves(board, player))
-    if not available:
-        print "Draw"
-        return board, 0.5
-    #print "available_moves", list(available)
     best = []
     best_move_score = -1.0
     avg = 0
     examined = 0
-    #print "Walking list of length", len(available)
     for move in available:
-        print "Examining", move
+        print "Preexamining", move, depth
+
         if wins(move, player):
             cache[(board,player)] = move, 1.0
             return move, 1.0
-        reply, other_score = choose_move(move, other(player))
-        score = 1 - other_score
+
+    for move in available:
+        #:print "Examining", move, depth
+        if wins(move, other(player)):
+            score = 0
+        elif " " not in move:
+            # This is a draw
+            score = 0.5
+        else:
+            reply, other_score = choose_move(move, other(player), depth + 1)
+            score = 1 - other_score
+
         avg += score
         examined += 1
         if score > best_move_score:
